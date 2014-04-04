@@ -9,6 +9,8 @@ from nltk.tokenize import RegexpTokenizer
 import argparse
 import re
 
+MAX_NGRAM_LENGTH = 10
+
 class WordToken:
     def __init__(self, text, start, end):
         self.text = text[start:end]
@@ -63,7 +65,7 @@ def tagged_token_gen(tags, word_tokens):
             tokenized_tag_text = ' '.join(word_tokenizer.tokenize(tag.get('tag')))
             tag_regex = re.compile('^' + tokenized_tag_text + 's?$', re.I)
             ngram_token = NGramToken(token_accum[-1:])
-            for gram_length in range(len(token_accum[-10:])):
+            for gram_length in range(len(token_accum[-MAX_NGRAM_LENGTH:])):
                 ngram_token = NGramToken(token_accum[-1 - gram_length:])
                 if tag_regex.match(ngram_token.text):
                     yield TaggedToken(tag, ngram_token)
