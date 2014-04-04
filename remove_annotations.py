@@ -1,36 +1,39 @@
 import requests
 import json
-
-def dict_to_url_params(d):
-    params = ''
-    prev = None
-    for key, value in d.items():
-        if prev:
-            params += '&'
-        else:
-            params += '?'
-        params += key + "=" + value
-        prev = key
-    return params
+import urllib, urllib2
+import argparse
 
 def remove_old_annotations(
-        SERVER_URL = "http://54.83.200.115/",
-        AUTH = None,
+        annotator_api_url,
+        auth,
         criteria = None
     ):
     if criteria is None:
         criteria = {
             'client' : 'annotabot-0.0.0'
         }
-    if AUTH is None: AUTH=(raw_input("username: "), raw_input("password: "))
-    r = requests.request("GET", SERVER_URL + "annotator/search" + dict_to_url_params(criteria), auth=AUTH)
+    r = requests.request("GET",
+            annotator_api_url + "search?" + urllib.urlencode(criteria),
+            auth=auth
+        )
     annotations = json.loads(r.text)
     
     for annotation in annotations.get('rows'):
-        print "Removing: http://54.83.200.115/annotator/annotations/" + annotation.get("id")
-        r = requests.request("DELETE", "http://54.83.200.115/annotator/annotations/" + annotation.get("id"), auth=AUTH)
+        print "Removing: " + annotator_api_url + "annotations/" + annotation.get("id")
+        r = requests.request("DELETE",
+            annotator_api_url + "annotations/" + annotation.get("id"),
+            auth=auth
+        )
         print r
     print 'done'
 
 if __name__ == "__main__":
-    remove_old_annotations()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-username')
+    parser.add_argument('-password')
+    parser.add_argument('-server', help='annotator server', default='localhost/')
+    args = parser.parse_args()
+    remove_old_annotations(
+        args.server + 'annotator/',
+        auth=(args.username, args.password)
+    )
